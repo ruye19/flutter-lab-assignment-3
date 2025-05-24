@@ -34,12 +34,29 @@ class _AlbumListScreenState extends State<AlbumListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Albums")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          "Albums",
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 24,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+      ),
       body: FutureBuilder<List<Album>>(
         future: _albumsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Colors.black,
+              ),
+            );
           }
 
           if (snapshot.hasError) {
@@ -47,13 +64,21 @@ class _AlbumListScreenState extends State<AlbumListScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text("Failed to load albums."),
+                  const Text(
+                    "Failed to load albums.",
+                    style: TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
                         _albumsFuture = _repository.fetchAlbums();
                       });
                     },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                    ),
                     child: const Text("Retry"),
                   )
                 ],
@@ -63,34 +88,84 @@ class _AlbumListScreenState extends State<AlbumListScreen> {
 
           final albums = snapshot.data!;
           return ListView.builder(
+            padding: const EdgeInsets.all(16),
             itemCount: albums.length,
             itemBuilder: (context, index) {
               final album = albums[index];
               final photo = _albumThumbnails[album.id];
 
-              return ListTile(
-                title: Text(album.title),
-                leading: photo != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          photo.thumbnailUrl,
-                          width: 100,
-                          height: 60,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.broken_image),
-                        ),
-                      )
-                    : Container(
-                        width: 100,
-                        height: 60,
-                        color: Colors.grey,
-                        child: const Icon(Icons.image),
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () {
+                      context.push('/detail', extra: album);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          // Album thumbnail
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: photo != null
+                                ? Image.network(
+                              photo.thumbnailUrl,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                    width: 60,
+                                    height: 60,
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.broken_image),
+                                  ),
+                            )
+                                : Container(
+                              width: 60,
+                              height: 60,
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.album),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          // Album title
+                          Expanded(
+                            child: Text(
+                              album.title,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Forward arrow
+                          const Icon(
+                            Icons.chevron_right,
+                            color: Colors.grey,
+                          ),
+                        ],
                       ),
-                onTap: () {
-                  context.push('/detail', extra: album);
-                },
+                    ),
+                  ),
+                ),
               );
             },
           );
